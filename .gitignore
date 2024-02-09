@@ -1,0 +1,8 @@
+*.parquet
+*.hdf5
+*.model
+.idea/
+__pycache__/
+venv/
+.venv/
+.env
