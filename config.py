@@ -2,6 +2,7 @@ import torch
 
 PRETRAINED_MODEL = "xlm-roberta-base"
 DEVICE = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+PREDICTION_BATCH_SIZE = 96  # can be lowered if video memory consumption is too high during inference
 
 ENVIRONMENT_PATH = ".env"
 

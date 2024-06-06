@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader, RandomSampler
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 
-from config import DEVICE
+from config import DEVICE, PREDICTION_BATCH_SIZE
 from preprocess import PreprocessedTrainingData, PreprocessedInputs
 from utils import move_to
 from xlmr import CustomXlmRoberta, create_bert
@@ -283,7 +283,7 @@ def make_predictions(inputs: PreprocessedInputs, model: CustomXlmRoberta, label_
 
     model.eval()
 
-    dl = make_dataloader_of_preprocessed(inputs, 200, False)
+    dl = make_dataloader_of_preprocessed(inputs, PREDICTION_BATCH_SIZE, False)
     with torch.no_grad():
         recombine_buffer = None
 
