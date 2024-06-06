@@ -235,11 +235,10 @@ def train_bert(inputs: PreprocessedTrainingData,
     return col_transf, early_stopper.best_state_dict, early_stopper.binary_threshold_opt, val_results
 
 
-def load_model(path: str, map_location=None) -> tuple[ColumnTransformer, CustomXlmRoberta, float | None, LabelEncoder]:
-    col_transf, state_dict, binary_threshold, label_encoder = torch.load(path, map_location)
-    bert = create_bert(len(label_encoder.classes_), False)
+def load_model(path: str) -> tuple[ColumnTransformer, CustomXlmRoberta, float | None, LabelEncoder]:
+    col_transf, state_dict, binary_threshold, label_encoder = torch.load(path, DEVICE)
+    bert = create_bert(len(label_encoder.classes_), True)
     bert.load_state_dict(state_dict)
-    bert = bert.to(DEVICE)
     return col_transf, bert, binary_threshold, label_encoder
 
 
