@@ -19,19 +19,17 @@ def column_transformer(orig: pd.DataFrame) -> tuple[ColumnTransformer, npt.NDArr
     :param orig: DataFrame with website samples
     :return: (fitted ColumnTransformer, numpy array with extracted features)
     """
-    transformer = ColumnTransformer(
-        remainder="drop",
-        transformers=[("num", Pipeline([
-            ("num_imput", SimpleImputer(missing_values=np.nan, strategy="median")),
-            ("num_scale", StandardScaler())
-        ]), NUMERIC_FEATURES),
-                      ("hosts", Pipeline([
-                          ("hosts_tfidf",
-                           TfidfVectorizer(analyzer="word", strip_accents="unicode", token_pattern=r"\S+")),
-                          ("hosts_best", TruncatedSVD(n_components=NB_LINKS_SVD_COMPONENTS)),
-                          ("hosts_scaler", StandardScaler())
-                      ]), "hosts")]
-    )
+    tfs = [("num", Pipeline(
+        [("num_imput", SimpleImputer(missing_values=np.nan, strategy="median")), ("num_scale", StandardScaler())]),
+            NUMERIC_FEATURES)]
+
+    if NB_LINKS_SVD_COMPONENTS > 0:
+        tfs.append(("hosts", Pipeline(
+            [("hosts_tfidf", TfidfVectorizer(analyzer="word", strip_accents="unicode", token_pattern=r"\S+")),
+             ("hosts_best", TruncatedSVD(n_components=NB_LINKS_SVD_COMPONENTS)), ("hosts_scaler", StandardScaler())]),
+                    "hosts"))
+
+    transformer = ColumnTransformer(remainder="drop", transformers=tfs)
 
     num_feat_transformed = transformer.fit_transform(orig)
 
