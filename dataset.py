@@ -8,17 +8,6 @@ import pyarrow.parquet as pq
 
 import utils
 from config import FETCH_TEST_SET_IGNORE_LABELS
-from wordsegment import wordsegment
-
-
-def list_to_str(x):
-    """
-    Joins the elements of a list with spaces.
-
-    :param x: The list
-    :return: A string with the elements of the list, separated by spaces
-    """
-    return " ".join([str(elem) for elem in x])
 
 
 def count_tag(html_struct: str, tag: str) -> int:
@@ -33,33 +22,6 @@ def count_tag(html_struct: str, tag: str) -> int:
     return html_struct.count(tag)
 
 
-__SEGMENTER = wordsegment.Segmenter()
-__SEGMENTER_LOADED = False
-
-
-def get_segmenter():
-    """
-    Constructs an instance from wordsegment.Segmenter, or returns the existing instance.
-
-    :return: A Segmenter
-    """
-    global __SEGMENTER_LOADED
-    if not __SEGMENTER_LOADED:
-        __SEGMENTER.load()
-        __SEGMENTER_LOADED = True
-    return __SEGMENTER
-
-
-def segment_domain_name(domain: str):
-    """
-    Segments a domain name by removing the TLD and splitting it into words using wordsegmenter.
-
-    :param domain: The domain name
-    :return: The domain name split in words (as a string, with spaces between words)
-    """
-    return " ".join(get_segmenter().segment(utils.remove_tld_from_domain_name(domain)))
-
-
 def fix_dataframe_from_mercator(df: pd.DataFrame) -> pd.DataFrame:
     """
     Fixes a DataFrame obtained from Mercator.
@@ -72,6 +34,8 @@ def fix_dataframe_from_mercator(df: pd.DataFrame) -> pd.DataFrame:
     :param df: The DataFrame as obtained from Mercator
     :return: The fixed DataFrame
     """
+    df["visit_id"] = df["visit_id"].astype(str)
+
     int64_columns = ["nb_facebook_deep_links", "nb_facebook_shallow_links", "nb_linkedin_deep_links",
                      "nb_linkedin_shallow_links", "nb_twitter_deep_links", "nb_twitter_shallow_links",
                      "nb_currency_names", "nb_distinct_currencies", "nb_youtube_deep_links",
@@ -84,21 +48,6 @@ def fix_dataframe_from_mercator(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.drop(labels=["converted_domain_names", "facebook_links", "vimeo_links", "twitter_links", "youtube_links",
                            "linkedin_links"], axis="columns", errors="ignore")
-
-
-def preprocess(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Performs basic preprocessing on a DataFrame with website samples, by converting the visit_id column to a string,
-    stringifying the external_hosts column (a list) into a hosts column, and segmenting the domain name.
-
-    :param df: DataFrame with website samples
-    :return: Preprocessed DataFrame
-    """
-    df["visit_id"] = df["visit_id"].astype(str)
-    df["hosts"] = df["external_hosts"].apply(list_to_str)
-    df["domain_segmented"] = df["domain_name"].apply(segment_domain_name)
-
-    return df.drop(labels=["external_hosts"], axis="columns")
 
 
 def create_parquet_xy_from_visits_tables(table_names: List[str], path_out_x: str, path_out_y: str):
@@ -124,7 +73,7 @@ def create_parquet_xy_from_visits_tables(table_names: List[str], path_out_x: str
     pqwriter_y = None
 
     for chunk in pd.read_sql_query(query, utils.make_mercator_engine(True), chunksize=1000):
-        chunk = preprocess(fix_dataframe_from_mercator(chunk))
+        chunk = fix_dataframe_from_mercator(chunk)
         y = chunk["label"].to_frame()
         chunk = chunk.drop(labels="label", axis="columns")
 
@@ -168,7 +117,7 @@ def create_parquet_x_from_visits_tables(table_names: List[str], path_out: str):
     pqwriter = None
 
     for chunk in pd.read_sql_query(query, utils.make_mercator_engine(True), chunksize=1000):
-        chunk = preprocess(fix_dataframe_from_mercator(chunk))
+        chunk = fix_dataframe_from_mercator(chunk)
 
         # noinspection PyArgumentList
         table = pa.Table.from_pandas(chunk)
@@ -217,7 +166,7 @@ def fetch_test_set(table_names: list[str], out_x: str, out_y: str):
     g = ar_samples.groupby("visit_id")
     agg = g.agg("first")
     agg.update(g.agg({"label": list}))
-    x_test = preprocess(fix_dataframe_from_mercator(agg.reset_index()))
+    x_test = fix_dataframe_from_mercator(agg.reset_index())
 
     labels = []
 

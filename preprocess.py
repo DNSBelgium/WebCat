@@ -15,10 +15,12 @@ from sklearn.preprocessing import LabelEncoder
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
+import utils
 from config import PRETRAINED_MODEL, NB_EXTRA_FEATURES
 from feature_extraction import column_transformer
 from utils import chunks
 from windowize import token_sequence_to_windows
+from wordsegment import wordsegment
 
 
 class PreprocessedInputs(Dataset):
@@ -198,6 +200,58 @@ def _add_label_encoder_to_file(h5f: h5py.File, label_enc: LabelEncoder, director
     )
 
 
+__SEGMENTER = wordsegment.Segmenter()
+__SEGMENTER_LOADED = False
+
+
+def get_segmenter():
+    """
+    Constructs an instance from wordsegment.Segmenter, or returns the existing instance.
+
+    :return: A Segmenter
+    """
+    global __SEGMENTER_LOADED
+    if not __SEGMENTER_LOADED:
+        __SEGMENTER.load()
+        __SEGMENTER_LOADED = True
+    return __SEGMENTER
+
+
+def list_to_str(x):
+    """
+    Joins the elements of a list with spaces.
+
+    :param x: The list
+    :return: A string with the elements of the list, separated by spaces
+    """
+    return " ".join([str(elem) for elem in x])
+
+
+def segment_domain_name(domain: str):
+    """
+    Segments a domain name by removing the TLD and splitting it into words using wordsegmenter.
+
+    :param domain: The domain name
+    :return: The domain name split in words (as a string, with spaces between words)
+    """
+    return " ".join(get_segmenter().segment(utils.remove_tld_from_domain_name(domain)))
+
+
+def preprocess_basic(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Performs basic preprocessing on a DataFrame with website samples, by converting the visit_id column to a string,
+    stringifying the external_hosts column (a list) into a hosts column, and segmenting the domain name.
+
+    :param df: DataFrame with website samples
+    :return: Preprocessed DataFrame
+    """
+    df["visit_id"] = df["visit_id"].astype(str)
+    df["hosts"] = df["external_hosts"].apply(list_to_str)
+    df["domain_segmented"] = df["domain_name"].apply(segment_domain_name)
+
+    return df.drop(labels=["external_hosts"], axis="columns")
+
+
 def preprocess_training_data(x: pd.DataFrame, y: pd.DataFrame, validation_size: float, path_out: str) -> None:
     """
     Preprocess training data from X and Y dataframes that can be obtained using dataset.py.
@@ -209,6 +263,8 @@ def preprocess_training_data(x: pd.DataFrame, y: pd.DataFrame, validation_size: 
                      Can later be loaded using PreprocessedTrainingData.
     """
     tokenizer = AutoTokenizer.from_pretrained(PRETRAINED_MODEL, use_fast=True)
+
+    x = preprocess_basic(x)
 
     col_transformer, transformed_features = column_transformer(x)
 
@@ -252,7 +308,7 @@ def preprocess_x(pqf: pq.ParquetFile, col_transformer: ColumnTransformer, path_o
 
     with PreprocessedInputs.create_new(path_out, pqf.metadata.num_rows, False) as preprocessed:
         for batch in pqf.iter_batches(batch_size=1000):
-            df = batch.to_pandas()
+            df = preprocess_basic(batch.to_pandas())
             transformed_features = col_transformer.transform(df)
             preprocess_inner(tokenizer, get_texts_from_dataframe(df), transformed_features, None,
                              df["visit_id"].to_numpy(), preprocessed)

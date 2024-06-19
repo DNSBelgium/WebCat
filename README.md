@@ -58,35 +58,23 @@ python dataset.py predict OUT_X TABLE1 [TABLE2 ...]
 
 The format of x values is the same for training, testing, and prediction. The format of y values differs between training and testing.
 
-For the x values, construct a `DataFrame` with the following columns, and a row per training sample:
+For the x values, construct a Parquet file with the following columns, and a row per training sample:
 
 * `visit_id` - a unique textual identifier for a web page snapshot
-* `domain_name` - domain name of the website
+* `domain_name` - domain name of the website (including the TLD)
 * `body_text` - the document text (title text and body text concatenated - just the text, no HTML)
 * `meta_text` - the meta description of the web page, empty string if nonexistent
 * `external_hosts` - a `list` of external domain names that the web page links to
 * Each numerical feature defined in config.py as `NUMERICAL_FEATURES` (edit this config variable as desired)
 
-Then call `dataset.preprocess` on this `DataFrame` (this is an elementary preprocessing step including word segmentation of the domain name - this is not the preprocessing step from the next section) and save it as Parquet file:
+For the y values for training, construct a Parquet file with one column, named `label`, containing a string with the label of the web page. The rows must be in the same order as the x values.
 
-```python
-import dataset
-
-# Construct DataFrame as 'df'
-df = ...
-
-df = dataset.preprocess(df)
-df.to_parquet("x.pq")
-```
-
-For the y values for training, construct a `DataFrame` with one column, named `label`, containing a string with the label of the web page. The rows must be in the same order as the x values.
-
-For the y values for testing, construct a `DataFrame` with one column, named `labels`, containing a _list_ of strings with the labels of the web page. This is to support multiple ground truth labels from different human annotators, and a distinction between unanimous and controversial websites is made during evaluation. Even if you have only one label per web page, this column must contain a list. The rows must be in the same order as the x values.
+For the y values for testing, construct a Parquet file with one column, named `labels`, containing a _list_ of strings with the labels of the web page. This is to support multiple ground truth labels from different human annotators, and a distinction between unanimous and controversial websites is made during evaluation. Even if you have only one label per web page, this column must contain a list. The rows must be in the same order as the x values.
 
 ## Preprocessing
 
 Before training or predicting, the dataset still needs to be preprocessed to obtain inputs that can directly be fed into the model.
-The input file(s) is the dataset(s) from the previous step, and the output is an HDF5 file.
+The input file(s) is the dataset(s) from the previous step (Parquet files), and the output is an HDF5 file.
 The preprocessing step for predictions also requires a trained model.
 
 For training:
