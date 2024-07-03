@@ -16,7 +16,7 @@ from torch.utils.data import Dataset
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 import utils
-from config import PRETRAINED_MODEL, NB_EXTRA_FEATURES
+from config import DEVICE, PRETRAINED_MODEL, NB_EXTRA_FEATURES
 from feature_extraction import column_transformer
 from utils import chunks
 from windowize import token_sequence_to_windows
@@ -417,7 +417,7 @@ def main() -> None:
         print("Starting preprocessing.")
         preprocess_training_data(df_x, df_y, args.split, args.out)
     elif args.command == "predict":
-        col_transf = torch.load(args.model)[0]
+        col_transf = torch.load(args.model, map_location=DEVICE)[0]
         with pq.ParquetFile(args.in_x) as pqf:
             print("Starting preprocessing.")
             preprocess_x(pqf, col_transf, args.out)

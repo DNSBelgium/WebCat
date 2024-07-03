@@ -494,7 +494,7 @@ def main() -> None:
         print("Starting predictions.")
         make_predictions(inputs, model, label_encoder, output_type, args.entropies, binary_threshold, args.out, True)
     elif args.command == "info":
-        col_transf, state_dict, binary_threshold, label_encoder = torch.load(args.model)
+        col_transf, state_dict, binary_threshold, label_encoder = torch.load(args.model, map_location=DEVICE)
         label_count = len(label_encoder.classes_)
         if label_count == 2:
             print("Binary model")
