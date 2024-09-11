@@ -16,6 +16,34 @@ Install the necessary dependencies: `pip install -r requirements.txt`. For tests
 
 A part of the model input consists of the domain name split in words, for which [wordsegment](https://github.com/grantjenks/python-wordsegment) is used. In the `wordsegment/` directory, you still need to create a `unigrams.txt` and `bigrams.txt` file. For English, the files `unigrams.txt` and `bigrams.txt` [from the original library](https://github.com/grantjenks/python-wordsegment/tree/master/wordsegment) can be used. For other languages, they could be derived from datasets such as [Web 1T 5-gram](https://catalog.ldc.upenn.edu/LDC2009T25).
 
+## Setup container
+
+It is possible to run webcat inside a container. Inside this container a webserver will be starter.
+To access this webserver the relevant port needs to be exported. It maybe also a good idea to export the folder
+which contain the generated parquet files.
+
+Example:
+```shell
+# Build the container
+docker build -t webcat-server -f Containerfile .
+
+# Start the container 
+docker run --rm \
+-v ./data/models:/data/models \
+-v ./data/hdf5_files:/data/hdf5_files \
+-v ./data/parquet_files_in:/data/parquet_files_in \
+-v ./data/parquet_files_out:/data/parquet_files_out \
+# Uncomment the next line to pass all gpus to into the container
+# --gpus all \
+-p 8000:8000 \
+webcat-test  
+```
+
+The webserver has an integrated documentation which is reachable on the path /docs or /redoc.
+
+It will also expose a metrics endpoint which is reachable on the path /metrics.
+
+
 ## Obtaining or constructing a dataset
 
 ### From [Mercator](https://github.com/DNSBelgium/mercator)
