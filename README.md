@@ -18,9 +18,11 @@ A part of the model input consists of the domain name split in words, for which 
 
 ## Setup container
 
-It is possible to run webcat inside a container. Inside this container a webserver will be starter.
+It is possible to run WebCat inside a container. Inside this container a webserver will be started.
 To access this webserver the relevant port needs to be exported. It maybe also a good idea to export the folder
-which contain the generated parquet files.
+which contains the generated parquet files.
+
+You need to install the dependencies from `requirements-webserver.txt` to use the webserver container.
 
 Example:
 ```shell

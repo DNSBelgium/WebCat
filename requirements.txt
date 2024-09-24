@@ -13,9 +13,3 @@ seaborn==0.13.0
 h5py==3.10.0
 pyarrow==14.0.1
 python-dotenv==1.0.0
-fastapi[standard]~=0.112.0
-scipy~=1.14.0
-pydantic~=2.8.2
-structlog==24.4.0
-pynvml==11.5.3
-prometheus_client==0.20.0
