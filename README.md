@@ -38,7 +38,7 @@ docker run --rm \
 # Uncomment the next line to pass all gpus to into the container
 # --gpus all \
 -p 8000:8000 \
-webcat-test  
+webcat-server  
 ```
 
 The webserver has an integrated documentation which is reachable on the path /docs or /redoc.
