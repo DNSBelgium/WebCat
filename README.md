@@ -46,47 +46,9 @@ The webserver has an integrated documentation which is reachable on the path /do
 It will also expose a metrics endpoint which is reachable on the path /metrics.
 
 
-## Obtaining or constructing a dataset
+## Dataset format
 
-### From [Mercator](https://github.com/DNSBelgium/mercator)
-
-Set the following environment variables, or fill the `.env` file:
-
-```text
-MERCATOR_HOST=...
-MERCATOR_PORT=...
-MERCATOR_DB=...
-MERCATOR_USER=...
-MERCATOR_PASS=...
-```
-
-Datasets can be loaded from Mercator, using a table (or multiple) that has at least a `visit_id` (UUID) and, for training/testing data, a `label` (text) column.
-Training data can be downloaded and saved like this:
-
-```text
-python dataset.py train OUT_X OUT_Y TABLE1 [TABLE2 ...]
-```
-
-Where `OUT_X` and `OUT_Y` are the paths for the output files, saved in Parquet format.
-`TABLE1` is just the name of the table.
-
-Similar for testing data (if a website has multiple labels from different annotators, use one row per label - `visit_id` is not expected to be unique):
-
-```text
-python dataset.py test OUT_X OUT_Y TABLE1 [TABLE2 ...]
-```
-
-If there are labels in this test set that should be ignored, edit `FETCH_TEST_SET_IGNORE_LABELS` in `config.py`.
-
-Data without label, that can be used for predictions, can be downloaded like this:
-
-```text
-python dataset.py predict OUT_X TABLE1 [TABLE2 ...]
-```
-
-### Without Mercator
-
-The format of x values is the same for training, testing, and prediction. The format of y values differs between training and testing.
+WebCat uses Parquet files for datasets. For training and testing, two Parquet files are required: one with x values (input data), one with y values (labels). For inference, only one Parquet with x values is required. The format of x values is the same for training, testing, and inference. The format of y values differs between training and testing.
 
 For the x values, construct a Parquet file with the following columns, and a row per training sample:
 
@@ -100,6 +62,8 @@ For the x values, construct a Parquet file with the following columns, and a row
 For the y values for training, construct a Parquet file with one column, named `label`, containing a string with the label of the web page. The rows must be in the same order as the x values.
 
 For the y values for testing, construct a Parquet file with one column, named `labels`, containing a _list_ of strings with the labels of the web page. This is to support multiple ground truth labels from different human annotators, and a distinction between unanimous and controversial websites is made during evaluation. Even if you have only one label per web page, this column must contain a list. The rows must be in the same order as the x values.
+
+Examples of minimal data files are shown in the `tutorial/` directory.
 
 ## Preprocessing
 
@@ -215,7 +179,7 @@ This is useful for the self-distillation process, which can be performed using t
 * Train 3 models from the manually labelled training set, with a different seed (or all three randomly seeded).
 * Use these models to generate predictions on an unseen set of websites, of the same size as the training set.
 * Combine the resulting 3 sets of predictions using `combine` with `--delete-if-no-majority`.
-* Use those predictions as additional training data (push them to a Mercator table and re-do the training process starting from "Obtaining or constructing a dataset").
+* Use those predictions as additional training data.
 
 ## Active learning
 
