@@ -4,7 +4,6 @@ from typing import TypeVar
 import torch
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 
 import config
 
@@ -14,35 +13,6 @@ def load_environment():
     Loads environment variables from the .env file (or another file as specified in the config).
     """
     load_dotenv(config.ENVIRONMENT_PATH)
-
-
-def make_mercator_engine(stream_results=False):
-    """
-    Constructs a database engine connected to the Mercator database.
-
-    :param stream_results: should the results be streamed rather than pre-buffered
-               (useful with chunksize in pd.read_sql_query)
-    :return: An engine connected to the Mercator database
-    """
-    host = os.getenv("MERCATOR_HOST")
-    if host is None:
-        raise RuntimeError("Environment variable MERCATOR_HOST not set when constructing Mercator engine.")
-    port = os.getenv("MERCATOR_PORT") or 5432
-    db = os.getenv("MERCATOR_DB") or "mercator"
-    user = os.getenv("MERCATOR_USER")
-    if user is None:
-        raise RuntimeError("Environment variable MERCATOR_USER not set when constructing Mercator engine.")
-    mercator_password = os.getenv("MERCATOR_PASS")
-    if mercator_password is None:
-        raise RuntimeError("Environment variable MERCATOR_PASS not set when constructing Mercator engine.")
-    uri = f"postgresql+psycopg://{user}:{mercator_password}@{host}:{port}/{db}"
-
-    if stream_results:
-        mercator_cnx = create_engine(uri, execution_options=dict(stream_results=True))
-    else:
-        mercator_cnx = create_engine(uri)
-
-    return mercator_cnx
 
 
 def chunks(lst, n):
