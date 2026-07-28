@@ -19,6 +19,7 @@ def column_transformer(orig: pd.DataFrame) -> tuple[ColumnTransformer, npt.NDArr
     :param orig: DataFrame with website samples
     :return: (fitted ColumnTransformer, numpy array with extracted features)
     """
+    tfs: list[tuple[str, Pipeline, str | list[str]]]
     tfs = [("num", Pipeline(
         [("num_imput", SimpleImputer(missing_values=np.nan, strategy="median")), ("num_scale", StandardScaler())]),
             NUMERIC_FEATURES)]
