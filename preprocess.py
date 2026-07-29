@@ -298,7 +298,7 @@ def preprocess_training_data(x: pd.DataFrame, y: pd.DataFrame, validation_size: 
 
 def preprocess_x(pqf: pq.ParquetFile, col_transformer: ColumnTransformer, path_out: str) -> None:
     """
-    Preprocess data from X dataframes that can be obtained using dataset.py.
+    Preprocess data from X dataframes.
 
     :param pqf: Parquet file with X dataframe
     :param col_transformer: Fitted ColumnTransformer

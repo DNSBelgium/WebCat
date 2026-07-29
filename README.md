@@ -65,6 +65,14 @@ For the y values for testing, construct a Parquet file with one column, named `l
 
 Examples of minimal data files are shown in the `tutorial/` directory.
 
+You can check the correctness of your dataset files with `dataset.py`:
+
+```
+python dataset.py checkx IN_X
+python dataset.py checky --train IN_Y
+python dataset.py checky --test IN_Y
+```
+
 ## Preprocessing
 
 Before training or predicting, the dataset still needs to be preprocessed to obtain inputs that can directly be fed into the model.
