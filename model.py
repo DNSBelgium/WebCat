@@ -132,7 +132,7 @@ def run_epoch(
     progress_bar = tqdm(training_dl, desc="Epoch {:1d}".format(epoch), leave=False, disable=False)
 
     if torch.cuda.is_available():
-        scaler = torch.cuda.amp.GradScaler()
+        scaler = torch.amp.GradScaler()
     else:
         scaler = None
 
@@ -153,7 +153,7 @@ def run_epoch(
         del inputs["visit_ids"]
 
         if scaler is not None:
-            with torch.cuda.amp.autocast():
+            with torch.amp.autocast():
                 outputs = model(**inputs)
         else:
             outputs = model(**inputs)
