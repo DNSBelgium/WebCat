@@ -153,7 +153,7 @@ def run_epoch(
         del inputs["visit_ids"]
 
         if scaler is not None:
-            with torch.amp.autocast():
+            with torch.amp.autocast("cuda"):
                 outputs = model(**inputs)
         else:
             outputs = model(**inputs)
