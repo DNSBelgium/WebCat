@@ -13,7 +13,7 @@ x = pd.DataFrame({
     "meta_text": ["Hello", "Example"],
     "body_text": ["This is a sentence.", "And another one."],
     "num1": [2, 4],
-    "hosts": ["a b", "b c d"]
+    "external_hosts": ["a b", "b c d"]
 })
 y = pd.DataFrame({
     "label": ["A", "A"]

@@ -27,7 +27,7 @@ from transformers import get_linear_schedule_with_warmup
 
 from config import DEVICE, PREDICTION_BATCH_SIZE
 from preprocess import PreprocessedTrainingData, PreprocessedInputs
-from utils import move_to
+from utils import move_to, torch_load
 from xlmr import CustomXlmRoberta, create_bert
 
 
@@ -236,7 +236,7 @@ def train_bert(inputs: PreprocessedTrainingData,
 
 
 def load_model(path: str) -> tuple[ColumnTransformer, CustomXlmRoberta, float | None, LabelEncoder]:
-    col_transf, state_dict, binary_threshold, label_encoder = torch.load(path, DEVICE)
+    col_transf, state_dict, binary_threshold, label_encoder = torch_load(path, DEVICE)
     bert = create_bert(len(label_encoder.classes_), True)
     bert.load_state_dict(state_dict)
     return col_transf, bert, binary_threshold, label_encoder
@@ -317,7 +317,7 @@ def make_predictions(inputs: PreprocessedInputs, model: CustomXlmRoberta, label_
                 to_recombine = np.vstack((b_probs, probabilities))
                 batch_visit_ids_tr = np.concatenate((b_visits, batch_visit_ids))
                 if batch_labels is not None:
-                    batch_labels_tr = np.concatenate((b_labels, batch_labels))
+                    batch_labels_tr = np.concatenate((b_labels, batch_labels)) # type: ignore[arg-type]
                 else:
                     batch_labels_tr = None
 
@@ -494,7 +494,7 @@ def main() -> None:
         print("Starting predictions.")
         make_predictions(inputs, model, label_encoder, output_type, args.entropies, binary_threshold, args.out, True)
     elif args.command == "info":
-        col_transf, state_dict, binary_threshold, label_encoder = torch.load(args.model, map_location=DEVICE)
+        col_transf, state_dict, binary_threshold, label_encoder = torch_load(args.model, map_location=DEVICE)
         label_count = len(label_encoder.classes_)
         if label_count == 2:
             print("Binary model")

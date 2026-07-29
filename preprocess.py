@@ -247,14 +247,15 @@ def preprocess_basic(df: pd.DataFrame) -> pd.DataFrame:
     """
     df["visit_id"] = df["visit_id"].astype(str)
     df["hosts"] = df["external_hosts"].apply(list_to_str)
-    df["domain_segmented"] = df["domain_name"].apply(segment_domain_name)
+    if "domain_segmented" not in df.columns:
+        df["domain_segmented"] = df["domain_name"].apply(segment_domain_name)
 
     return df.drop(labels=["external_hosts"], axis="columns")
 
 
 def preprocess_training_data(x: pd.DataFrame, y: pd.DataFrame, validation_size: float, path_out: str) -> None:
     """
-    Preprocess training data from X and Y dataframes that can be obtained using dataset.py.
+    Preprocess training data from X and Y dataframes.
 
     :param x: DataFrame with X values
     :param y: DataFrame with Y values
@@ -347,7 +348,7 @@ def preprocess_inner(tokenizer: PreTrainedTokenizerBase,
         # Process text samples in chunks to not run out of memory
         # and extend the HDF5 datasets after processing each chunk.
 
-        encoded_strings = tokenizer.batch_encode_plus(
+        encoded_strings = tokenizer(
             text_chunk,
             add_special_tokens=True,
             return_attention_mask=False,
@@ -417,7 +418,7 @@ def main() -> None:
         print("Starting preprocessing.")
         preprocess_training_data(df_x, df_y, args.split, args.out)
     elif args.command == "predict":
-        col_transf = torch.load(args.model, map_location=DEVICE)[0]
+        col_transf = utils.torch_load(args.model, map_location=DEVICE)[0]
         with pq.ParquetFile(args.in_x) as pqf:
             print("Starting preprocessing.")
             preprocess_x(pqf, col_transf, args.out)

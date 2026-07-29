@@ -1,9 +1,17 @@
 import os
 from typing import TypeVar
 
+import numpy as np
 import torch
 
 from dotenv import load_dotenv
+
+from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer, TfidfTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 import config
 
@@ -66,3 +74,27 @@ def flatten(lst: list[list[T]]) -> list[T]:
     :return: The flattened list (flattened by one level)
     """
     return [item for sublist in lst for item in sublist]
+
+
+def torch_load(path: str, map_location: torch.device | None = None):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Model not found at {path}.")
+    with torch.serialization.safe_globals([
+        ColumnTransformer,
+        TruncatedSVD,
+        TfidfVectorizer,
+        TfidfTransformer,
+        SimpleImputer,
+        Pipeline,
+        StandardScaler,
+        np.float64,
+        np.core.multiarray._reconstruct, # type: ignore
+        np.core.multiarray.scalar, # type: ignore
+        np.ndarray,
+        np.dtype,
+        np.dtypes.ObjectDType,
+        np.dtypes.Float64DType,
+        slice,
+        LabelEncoder,
+    ]):
+        return torch.load(path, map_location=map_location)

@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from config import DEVICE
 from model import load_model, make_predictions
 from preprocess import preprocess_x, PreprocessedInputs
+import utils
 
 structlog.configure(
     processors=[
@@ -960,7 +961,7 @@ def do_preparation(job_id: str, model: str):
 
 
 def dit_data_preparation(model_path, parquet_path, hd5_path):
-    col_transf = torch.load(model_path, map_location=DEVICE)[0]
+    col_transf = utils.torch_load(model_path, map_location=DEVICE)[0]
     with pq.ParquetFile(parquet_path) as pqf:
         preprocess_x(pqf, col_transf, hd5_path)
 

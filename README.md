@@ -4,7 +4,7 @@ Implementation of an LLM-based website classifier, as described in [Thomas Danie
 
 ## Setup
 
-WebCat requires Python 3.10 or above.
+WebCat requires Python 3.11 or above.
 Create a new virtual environment to isolate dependencies from other projects:
 
 ```

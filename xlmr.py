@@ -2,7 +2,7 @@ from typing import Optional
 from typing import Tuple
 
 import torch
-from torch import nn
+from torch import FloatTensor, nn
 from transformers import XLMRobertaModel, XLMRobertaForSequenceClassification
 from transformers import logging
 from transformers.modeling_outputs import SequenceClassifierOutput
@@ -68,7 +68,7 @@ class CustomXlmRoberta(XLMRobertaForSequenceClassification):
             config.num_labels - 1]`. If `config.num_labels == 1` a regression loss is computed (Mean-Square loss), If
             `config.num_labels > 1` a classification loss is computed (Cross-Entropy).
         """
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = return_dict if return_dict is not None else self.config.return_dict
 
         outputs = self.roberta(
             input_ids,
@@ -95,7 +95,7 @@ class CustomXlmRoberta(XLMRobertaForSequenceClassification):
 
         logits = self.classifier(output)
 
-        loss: None | nn.CrossEntropyLoss = None
+        loss: None | FloatTensor = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
@@ -125,7 +125,7 @@ def create_bert(label_amount: int, move: bool = True) -> CustomXlmRoberta:
     logging.set_verbosity(saved_verbosity)
 
     if move:
-        model = model.to(DEVICE)
+        model = model.to(DEVICE)  # type: ignore[arg-type]
 
     return model
 
